@@ -1,0 +1,33 @@
+name: snake
+
+# Fetches the homepage, favicon, and game SVGs for git.co.nr/ellisvlad that are rebuilt daily at 00:00 UTC.
+# The fetched resources are published to the `output` branch so README can load them from raw.githubusercontent.com instead of
+# through GitHub's image proxy (camo), which caches much longer than raw.githubusercontent.com does.
+
+on:
+  schedule:
+    - cron: "30 1 * * *" # daily, after git.co.nr build at 00:00 UTC
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download assets from git.co.nr
+        run: |
+          curl -fsSL --fail-early --create-dirs --output-dir dist --remote-name-all \
+            "https://git.co.nr/ellisvlad/{index.html,favicon.svg,snake.svg,brick.svg,life.svg,sandpile.svg,invaders.svg}"
+          ls -la dist
+
+      - uses: crazy-max/ghaction-github-pages@v4
+        with:
+          target_branch: output
+          build_dir: dist
+          jekyll: false
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
